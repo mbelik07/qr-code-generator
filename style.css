@@ -26,18 +26,15 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 /* --- THE FRAME SYSTEM --- */
-/* We use a CSS variable --frame-color for dynamic coloring */
 #frame-box {
     --frame-color: #000000;
     transition: all 0.3s ease;
     box-sizing: border-box;
+    background: white; /* Ensure white bg */
 }
 
 /* 1. None */
-.frame-none {
-    border: none;
-    padding: 0;
-}
+.frame-none { border: none; padding: 0; }
 .frame-none #frame-text-el { display: none; }
 
 /* 2. Simple Border */
@@ -45,38 +42,63 @@ input[type=range]::-webkit-slider-thumb {
     border: 12px solid var(--frame-color);
     border-radius: 20px;
     padding: 16px;
-    background: white;
 }
 .frame-simple #frame-text-el { display: none; }
 
-/* 3. Polaroid */
+/* 3. Label Strip (New 'Enrol' Style) */
+.frame-label-strip {
+    border: 4px solid var(--frame-color);
+    border-radius: 12px;
+    padding: 12px;
+    padding-bottom: 0 !important; /* Flush with bottom */
+    overflow: hidden; /* contain the footer */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.frame-label-strip #qrcode {
+    margin-bottom: 12px;
+}
+.frame-label-strip #frame-text-el {
+    display: block;
+    width: calc(100% + 24px); /* Stretch past padding */
+    margin-left: -12px;
+    margin-right: -12px;
+    background: var(--frame-color);
+    color: white; /* Contrast text */
+    padding: 10px 0;
+    font-size: 24px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 800;
+}
+
+/* 4. Polaroid */
 .frame-polaroid {
-    border: 10px solid var(--frame-color);
-    border-radius: 16px;
+    border: 4px solid #e2e8f0; /* Light gray border for polaroid feel */
+    border-bottom: 60px solid white; /* Space for text */
+    border-radius: 4px; /* Sharper corners */
     padding: 16px;
-    padding-bottom: 50px !important; /* Space for text */
-    background: white;
-    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 .frame-polaroid #frame-text-el {
     display: block;
     position: absolute;
-    bottom: 12px;
-    left: 0; 
-    right: 0;
-    text-align: center;
+    bottom: -50px; /* In the border area */
+    left: 0; right: 0;
     color: var(--frame-color);
     font-size: 20px;
+    font-family: 'Courier New', Courier, monospace; /* Retro font */
 }
 
-/* 4. Top Bubble */
+
+/* 5. Top Bubble */
 .frame-top-bubble {
     border: 4px solid var(--frame-color);
     border-radius: 24px;
     padding: 20px;
-    position: relative;
-    background: white;
-    margin-top: 20px; /* Space for bubble popping out */
+    margin-top: 20px;
 }
 .frame-top-bubble #frame-text-el {
     display: block;
@@ -85,8 +107,6 @@ input[type=range]::-webkit-slider-thumb {
     left: 50%;
     transform: translateX(-50%);
     background: var(--frame-color);
-    /* Basic contrast handling in pure CSS is hard, defaulting to white text. 
-       We manually override in JS if needed, but white is usually safe for dark frames. */
     color: white; 
     padding: 6px 20px;
     border-radius: 20px;
@@ -95,7 +115,6 @@ input[type=range]::-webkit-slider-thumb {
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-/* QR Code Animation */
 #qrcode img {
     display: block;
     max-width: 100%;
