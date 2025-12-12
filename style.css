@@ -1,6 +1,13 @@
 /* Custom Styles */
 
-/* Range Slider Thumb */
+/* Type Button Active State */
+.type-btn.active {
+    background-color: #eff6ff; /* blue-50 */
+    color: #4f46e5; /* indigo-600 */
+    border: 1px solid #e0e7ff;
+}
+
+/* Range Slider */
 input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
     height: 20px;
@@ -10,13 +17,7 @@ input[type=range]::-webkit-slider-thumb {
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
     margin-top: -6px;
-    transition: transform 0.1s;
 }
-
-input[type=range]::-webkit-slider-thumb:hover {
-    transform: scale(1.1);
-}
-
 input[type=range]::-moz-range-thumb {
     height: 20px;
     width: 20px;
@@ -25,31 +26,116 @@ input[type=range]::-moz-range-thumb {
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
     border: none;
-    transition: transform 0.1s;
 }
 
-/* Animations */
-@keyframes popIn {
-    0% { opacity: 0; transform: scale(0.95); }
-    100% { opacity: 1; transform: scale(1); }
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 #qrcode img {
     max-width: 100%;
     height: auto;
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    display: block; /* Removes bottom space */
+    animation: fadeIn 0.4s ease-out;
+    display: block;
 }
 
-/* Color Input Overlay hack */
+/* Frame Selection Active State logic is handled via JS classes usually, 
+   but we need a helper for the 'active' border on the preview boxes */
+.frame-option.selected .frame-preview {
+    border-color: #4f46e5;
+    background-color: #eff6ff;
+    box-shadow: 0 0 0 2px #e0e7ff;
+}
+.frame-option.selected p {
+    color: #4f46e5;
+    font-weight: 600;
+}
+
+/* --- FRAME STYLES --- */
+
+/* Base Wrapper */
+#frame-wrapper {
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    border-radius: 0; 
+}
+
+/* Style: Simple Border */
+.frame-style-simple #frame-wrapper {
+    border: 12px solid #000; /* Color overridden by JS */
+    border-radius: 24px;
+    padding: 16px;
+    background: white;
+}
+.frame-style-simple #frame-text {
+    display: none;
+}
+
+/* Style: Polaroid (Bottom Text) */
+.frame-style-polaroid #frame-wrapper {
+    border: 10px solid #000; /* Color overridden */
+    border-radius: 20px;
+    padding: 16px;
+    padding-bottom: 50px; /* Space for text */
+    background: white;
+    position: relative;
+}
+.frame-style-polaroid #frame-text {
+    display: block;
+    position: absolute;
+    bottom: 12px;
+    left: 0;
+    right: 0;
+    color: #000; /* Overridden */
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+/* Style: Bubble Top */
+.frame-style-top-bubble {
+    /* No border on wrapper itself, but we might add a pseudo-element if needed.
+       For simplicity, we'll style the wrapper to look like a card */
+}
+
+.frame-style-top-bubble #frame-wrapper {
+    border-radius: 16px;
+    padding: 20px;
+    background: white;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    position: relative;
+    border: 4px solid transparent; /* placeholder */
+}
+
+/* For bubble, we actually want the text ON TOP of the QR like a badge.
+   We will manage this structure via simpler CSS: text above QR */
+.frame-style-top-bubble #frame-text {
+    display: block;
+    background: #000; /* Overridden */
+    color: white;
+    padding: 8px 24px;
+    border-radius: 99px;
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1rem;
+    white-space: nowrap;
+    z-index: 10;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Color inputs */
 input[type="color"] {
     -webkit-appearance: none;
     border: none;
+    background: none;
 }
 input[type="color"]::-webkit-color-swatch-wrapper {
     padding: 0; 
 }
 input[type="color"]::-webkit-color-swatch {
-    border: none;
-    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
 }
