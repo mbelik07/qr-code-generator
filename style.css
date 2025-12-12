@@ -18,124 +18,85 @@ input[type=range]::-webkit-slider-thumb {
     box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
     margin-top: -6px;
 }
-input[type=range]::-moz-range-thumb {
-    height: 20px;
-    width: 20px;
-    border-radius: 50%;
-    background: #4f46e5;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
-    border: none;
-}
 
-/* Animation */
-@keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-}
-
-#qrcode img {
-    max-width: 100%;
-    height: auto;
-    animation: fadeIn 0.4s ease-out;
-    display: block;
-}
-
-/* Frame Selection Active State logic is handled via JS classes usually, 
-   but we need a helper for the 'active' border on the preview boxes */
+/* Frame Preview Button Selected State */
 .frame-option.selected .frame-preview {
-    border-color: #4f46e5;
-    background-color: #eff6ff;
-    box-shadow: 0 0 0 2px #e0e7ff;
-}
-.frame-option.selected p {
-    color: #4f46e5;
-    font-weight: 600;
+    border-color: #4f46e5 !important;
+    background-color: #eff6ff !important;
 }
 
-/* --- FRAME STYLES --- */
-
-/* Base Wrapper */
-#frame-wrapper {
-    box-sizing: border-box;
+/* --- THE FRAME SYSTEM --- */
+/* We use a CSS variable --frame-color for dynamic coloring */
+#frame-box {
+    --frame-color: #000000;
     transition: all 0.3s ease;
-    border-radius: 0; 
+    box-sizing: border-box;
 }
 
-/* Style: Simple Border */
-.frame-style-simple #frame-wrapper {
-    border: 12px solid #000; /* Color overridden by JS */
-    border-radius: 24px;
+/* 1. None */
+.frame-none {
+    border: none;
+    padding: 0;
+}
+.frame-none #frame-text-el { display: none; }
+
+/* 2. Simple Border */
+.frame-simple {
+    border: 12px solid var(--frame-color);
+    border-radius: 20px;
     padding: 16px;
     background: white;
 }
-.frame-style-simple #frame-text {
-    display: none;
-}
+.frame-simple #frame-text-el { display: none; }
 
-/* Style: Polaroid (Bottom Text) */
-.frame-style-polaroid #frame-wrapper {
-    border: 10px solid #000; /* Color overridden */
-    border-radius: 20px;
+/* 3. Polaroid */
+.frame-polaroid {
+    border: 10px solid var(--frame-color);
+    border-radius: 16px;
     padding: 16px;
-    padding-bottom: 50px; /* Space for text */
+    padding-bottom: 50px !important; /* Space for text */
     background: white;
     position: relative;
 }
-.frame-style-polaroid #frame-text {
+.frame-polaroid #frame-text-el {
     display: block;
     position: absolute;
     bottom: 12px;
-    left: 0;
+    left: 0; 
     right: 0;
-    color: #000; /* Overridden */
-    font-size: 1.25rem;
-    line-height: 1;
+    text-align: center;
+    color: var(--frame-color);
+    font-size: 20px;
 }
 
-/* Style: Bubble Top */
-.frame-style-top-bubble {
-    /* No border on wrapper itself, but we might add a pseudo-element if needed.
-       For simplicity, we'll style the wrapper to look like a card */
-}
-
-.frame-style-top-bubble #frame-wrapper {
-    border-radius: 16px;
+/* 4. Top Bubble */
+.frame-top-bubble {
+    border: 4px solid var(--frame-color);
+    border-radius: 24px;
     padding: 20px;
-    background: white;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
     position: relative;
-    border: 4px solid transparent; /* placeholder */
+    background: white;
+    margin-top: 20px; /* Space for bubble popping out */
 }
-
-/* For bubble, we actually want the text ON TOP of the QR like a badge.
-   We will manage this structure via simpler CSS: text above QR */
-.frame-style-top-bubble #frame-text {
+.frame-top-bubble #frame-text-el {
     display: block;
-    background: #000; /* Overridden */
-    color: white;
-    padding: 8px 24px;
-    border-radius: 99px;
     position: absolute;
     top: -20px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 1rem;
+    background: var(--frame-color);
+    /* Basic contrast handling in pure CSS is hard, defaulting to white text. 
+       We manually override in JS if needed, but white is usually safe for dark frames. */
+    color: white; 
+    padding: 6px 20px;
+    border-radius: 20px;
     white-space: nowrap;
-    z-index: 10;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    font-size: 14px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-/* Color inputs */
-input[type="color"] {
-    -webkit-appearance: none;
-    border: none;
-    background: none;
-}
-input[type="color"]::-webkit-color-swatch-wrapper {
-    padding: 0; 
-}
-input[type="color"]::-webkit-color-swatch {
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
+/* QR Code Animation */
+#qrcode img {
+    display: block;
+    max-width: 100%;
 }
