@@ -40,12 +40,15 @@
                 
                 <!-- 1. Content Type -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-1">
-                    <div class="grid grid-cols-2 gap-1">
+                    <div class="grid grid-cols-3 gap-1">
                         <button onclick="switchType('url')" id="btn-url" class="type-btn active flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all">
                             <i class="fa-solid fa-link"></i> URL
                         </button>
                         <button onclick="switchType('text')" id="btn-text" class="type-btn flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all text-slate-500 hover:bg-slate-50">
                             <i class="fa-solid fa-font"></i> Free Text
+                        </button>
+                        <button onclick="switchType('event')" id="btn-event" class="type-btn flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all text-slate-500 hover:bg-slate-50">
+                            <i class="fa-regular fa-calendar-check"></i> Event
                         </button>
                     </div>
                 </div>
@@ -57,6 +60,7 @@
                         Enter Content
                     </h2>
                     
+                    <!-- URL Input -->
                     <div id="input-group-url">
                         <label class="block text-sm font-medium text-slate-500 mb-1">Website URL</label>
                         <div class="relative">
@@ -69,10 +73,42 @@
                         </div>
                     </div>
 
+                    <!-- Text Input -->
                     <div id="input-group-text" class="hidden">
                         <label class="block text-sm font-medium text-slate-500 mb-1">Enter Text</label>
                         <textarea id="text-input" oninput="triggerRegen()" rows="3" placeholder="Enter your text here..." 
                             class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"></textarea>
+                    </div>
+
+                    <!-- Event Input (New) -->
+                    <div id="input-group-event" class="hidden space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-500 mb-1">Event Title</label>
+                            <input type="text" id="event-title" oninput="triggerRegen()" placeholder="Course Enrolment Session" 
+                            class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-500 mb-1">Starts</label>
+                                <input type="datetime-local" id="event-start" oninput="triggerRegen()" 
+                                class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-500 mb-1">Ends</label>
+                                <input type="datetime-local" id="event-end" oninput="triggerRegen()" 
+                                class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-500 mb-1">Location</label>
+                            <input type="text" id="event-location" oninput="triggerRegen()" placeholder="Microsoft Teams / Room 304" 
+                            class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                         <div>
+                             <button onclick="downloadICS()" class="text-xs text-indigo-600 font-medium hover:text-indigo-800 flex items-center gap-1 mt-1">
+                                <i class="fa-solid fa-file-export"></i> Download .ics file for Teams
+                             </button>
+                        </div>
                     </div>
                 </div>
 
@@ -98,7 +134,7 @@
                             <p class="text-[10px] text-center mt-1 text-slate-500 group-hover:text-slate-700">Border</p>
                         </div>
 
-                        <!-- New Label Strip Style -->
+                        <!-- Label Strip Style -->
                         <div onclick="selectFrame('label-strip')" id="opt-label-strip" class="frame-option cursor-pointer group">
                             <div class="frame-preview h-16 border border-slate-200 rounded-lg flex items-center justify-center hover:border-indigo-300 hover:bg-slate-50 transition-all p-2 relative">
                                 <div class="w-8 h-10 border border-black rounded-sm flex flex-col">

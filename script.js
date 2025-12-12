@@ -22,13 +22,32 @@ window.switchType = function(type) {
         activeBtn.style.border = "1px solid #e0e7ff";
     }
 
+    // Hide all inputs first
+    document.getElementById('input-group-url').classList.add('hidden');
+    document.getElementById('input-group-text').classList.add('hidden');
+    document.getElementById('input-group-event').classList.add('hidden');
+
+    // Show selected
     if (type === 'url') {
         document.getElementById('input-group-url').classList.remove('hidden');
-        document.getElementById('input-group-text').classList.add('hidden');
-    } else {
-        document.getElementById('input-group-url').classList.add('hidden');
+        document.getElementById('frame-text-input').value = "Scan Me"; // default hint
+    } else if (type === 'text') {
         document.getElementById('input-group-text').classList.remove('hidden');
+        document.getElementById('frame-text-input').value = "Read Me";
+    } else if (type === 'event') {
+        document.getElementById('input-group-event').classList.remove('hidden');
+         document.getElementById('frame-text-input').value = "Save Date";
+         
+         // Set default date if empty
+         const d = new Date();
+         d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+         if(!document.getElementById('event-start').value) {
+             document.getElementById('event-start').value = d.toISOString().slice(0,16);
+         }
     }
+    
+    // Update the frame text UI directly to match assumption (nice touch)
+    updateFrameText(document.getElementById('frame-text-input').value);
 
     triggerRegen();
 };
@@ -51,7 +70,7 @@ window.selectFrame = function(frame) {
     }
     
     updateBubbleTextContrast();
-    triggerRegen(); // Re-render image
+    triggerRegen(); 
 };
 
 window.updateFrameColor = function(color) {
@@ -82,32 +101,12 @@ window.setCorrection = function(level, btnElement) {
 
 window.updateSize = function(val) {
     document.getElementById('size-value').textContent = val + 'px';
-    // No triggerRegen here to avoid heavy lag while dragging
-    // Wait for mouseup? Or just debounce heavily.
 };
-// Add change listener for slider end
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('size-input').addEventListener('change', triggerRegen);
 });
 
-
-window.triggerRegen = function() {
-    // Generate QR Immediately in DOM
-    generateQR();
-    
-    // Debounce the Image Render (it's heavy)
-    const imgPreview = document.getElementById('final-preview-image');
-    const loading = document.getElementById('loading-msg');
-    
-    if (imgPreview) imgPreview.style.opacity = '0.5';
-    if (loading) loading.style.opacity = '1';
-
-    if (regenTimeout) clearTimeout(regenTimeout);
-    
-    regenTimeout = setTimeout(() => {
-        renderCompositeImage();
-    }, 600);
-};
+// --- QR Logic ---
 
 window.generateQR = function() {
     const container = document.getElementById('qrcode');
@@ -117,8 +116,10 @@ window.generateQR = function() {
     let data;
     if (currentType === 'url') {
         data = document.getElementById('url-input').value.trim() || "https://github.com/mbelik07";
-    } else {
+    } else if (currentType === 'text') {
         data = document.getElementById('text-input').value.trim() || "Hello World";
+    } else if (currentType === 'event') {
+        data = generateIcalString();
     }
 
     const size = parseInt(document.getElementById('size-input').value) || 300;
@@ -139,13 +140,60 @@ window.generateQR = function() {
     }
 };
 
+window.generateIcalString = function() {
+    const title = document.getElementById('event-title').value || "Event";
+    const loc = document.getElementById('event-location').value || "";
+    const startStr = document.getElementById('event-start').value;
+    const endStr = document.getElementById('event-end').value;
+
+    // Helper to format date for iCal: YYYYMMDDTHHMMSS
+    const formatICSDate = (isoStr) => {
+        if(!isoStr) return "";
+        return isoStr.replace(/[-:]/g, "").replace(".", "") + "00";
+    };
+
+    const start = formatICSDate(startStr) || "20240101T090000";
+    const end = formatICSDate(endStr) || "20240101T100000";
+
+    // Basic VCALENDAR structure
+    return `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+SUMMARY:${title}
+DTSTART:${start}
+DTEND:${end}
+LOCATION:${loc}
+DESCRIPTION:Scanned from QR
+END:VEVENT
+END:VCALENDAR`;
+};
+
+
+// --- Rendering & Utility ---
+
+window.triggerRegen = function() {
+    generateQR();
+    
+    const imgPreview = document.getElementById('final-preview-image');
+    const loading = document.getElementById('loading-msg');
+    
+    if (imgPreview) imgPreview.style.opacity = '0.5';
+    if (loading) loading.style.opacity = '1';
+
+    if (regenTimeout) clearTimeout(regenTimeout);
+    
+    regenTimeout = setTimeout(() => {
+        renderCompositeImage();
+    }, 600);
+};
+
 window.renderCompositeImage = function() {
-    const source = document.getElementById('frame-box'); // The hidden DOM element
+    const source = document.getElementById('frame-box');
     const imgPreview = document.getElementById('final-preview-image');
     const loading = document.getElementById('loading-msg');
 
     html2canvas(source, {
-        scale: 2, // High res for right-click copy
+        scale: 2, 
         backgroundColor: null
     }).then(canvas => {
         const dataUrl = canvas.toDataURL('image/png');
@@ -161,13 +209,26 @@ window.downloadDesign = function() {
     const imgPreview = document.getElementById('final-preview-image');
     if(imgPreview && imgPreview.src) {
         const link = document.createElement('a');
-        link.download = `QR-Enrol-${Date.now()}.png`;
+        link.download = `QR-${currentType}-${Date.now()}.png`;
         link.href = imgPreview.src;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     }
 };
+
+window.downloadICS = function() {
+    const icsContent = generateIcalString();
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    const title = document.getElementById('event-title').value || "event";
+    link.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
 
 function updateBubbleTextContrast() {
     if (currentFrame !== 'top-bubble' && currentFrame !== 'label-strip') return;
@@ -186,5 +247,6 @@ function updateBubbleTextContrast() {
 
 // Initial Boot
 document.addEventListener('DOMContentLoaded', () => {
+    // Set a default start time for better UX if needed (handled in switch but good here too)
     triggerRegen();
 });
