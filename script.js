@@ -30,7 +30,7 @@ window.switchType = function(type) {
     // Show selected
     if (type === 'url') {
         document.getElementById('input-group-url').classList.remove('hidden');
-        document.getElementById('frame-text-input').value = "Scan Me"; // default hint
+        document.getElementById('frame-text-input').value = "Scan Me"; 
     } else if (type === 'text') {
         document.getElementById('input-group-text').classList.remove('hidden');
         document.getElementById('frame-text-input').value = "Read Me";
@@ -46,9 +46,7 @@ window.switchType = function(type) {
          }
     }
     
-    // Update the frame text UI directly to match assumption (nice touch)
     updateFrameText(document.getElementById('frame-text-input').value);
-
     triggerRegen();
 };
 
@@ -107,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- QR Logic ---
-
 window.generateQR = function() {
     const container = document.getElementById('qrcode');
     if (!container) return;
@@ -143,6 +140,7 @@ window.generateQR = function() {
 window.generateIcalString = function() {
     const title = document.getElementById('event-title').value || "Event";
     const loc = document.getElementById('event-location').value || "";
+    const url = document.getElementById('event-url').value || "";
     const startStr = document.getElementById('event-start').value;
     const endStr = document.getElementById('event-end').value;
 
@@ -155,7 +153,12 @@ window.generateIcalString = function() {
     const start = formatICSDate(startStr) || "20240101T090000";
     const end = formatICSDate(endStr) || "20240101T100000";
 
-    // Basic VCALENDAR structure
+    // Build the description with the URL if it exists
+    let description = "Scanned from QR";
+    if (url) {
+        description = `Join online: ${url}\\n\\n${description}`;
+    }
+
     return `BEGIN:VCALENDAR
 VERSION:2.0
 BEGIN:VEVENT
@@ -163,7 +166,8 @@ SUMMARY:${title}
 DTSTART:${start}
 DTEND:${end}
 LOCATION:${loc}
-DESCRIPTION:Scanned from QR
+DESCRIPTION:${description}
+URL:${url}
 END:VEVENT
 END:VCALENDAR`;
 };
@@ -247,6 +251,5 @@ function updateBubbleTextContrast() {
 
 // Initial Boot
 document.addEventListener('DOMContentLoaded', () => {
-    // Set a default start time for better UX if needed (handled in switch but good here too)
     triggerRegen();
 });
