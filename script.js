@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Core Elements
+    // --- Elements ---
     const qrcodeContainer = document.getElementById('qrcode');
     const captureWrapper = document.getElementById('capture-wrapper');
     const frameWrapper = document.getElementById('frame-wrapper');
@@ -23,28 +23,96 @@ document.addEventListener('DOMContentLoaded', () => {
     // Buttons
     const generateBtn = document.getElementById('generate-btn');
     const downloadBtn = document.getElementById('download-png');
+    const typeBtns = document.querySelectorAll('.type-btn');
+    const frameOptions = document.querySelectorAll('.frame-option');
+    const levelBtns = document.querySelectorAll('.level-btn');
     
-    // State
+    // --- State ---
     let currentType = 'url';
     let correctionLevel = 'H';
     let currentFrame = 'none';
     
-    // --- Initialization ---
-    generateQR();
-    selectFrame('none'); // Default
+    // --- Event Bindings ---
 
-    // --- Type Switching ---
-    window.switchType = (type) => {
+    // 1. Type Switching
+    typeBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const type = e.currentTarget.dataset.type; // use currentTarget to hit the button
+            handleTypeSwitch(type);
+        });
+    });
+
+    // 2. Frame Selection
+    frameOptions.forEach(opt => {
+        opt.addEventListener('click', (e) => {
+            const frame = e.currentTarget.dataset.frame;
+            handleFrameSelect(frame);
+        });
+    });
+
+    // 3. Level Selection
+    levelBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // UI Update
+            levelBtns.forEach(b => {
+                b.classList.remove('active', 'bg-indigo-50', 'text-indigo-700', 'border-indigo-600');
+                b.classList.add('text-slate-600', 'border-slate-200');
+            });
+            e.currentTarget.classList.add('active', 'bg-indigo-50', 'text-indigo-700', 'border-indigo-600');
+            e.currentTarget.classList.remove('text-slate-600', 'border-slate-200');
+            
+            correctionLevel = e.currentTarget.dataset.level;
+        });
+    });
+
+    // 4. Inputs
+    sizeInput.addEventListener('input', (e) => {
+        sizeValueDisplay.textContent = `${e.target.value}px`;
+    });
+
+    frameTextInput.addEventListener('input', updateFrameStyles);
+    frameColorInput.addEventListener('input', updateFrameStyles);
+
+    // 5. Actions
+    generateBtn.addEventListener('click', generateQR);
+    
+    downloadBtn.addEventListener('click', () => {
+        const elementToCapture = frameWrapper;
+        
+        // Ensure background is transparent/white as needed
+        html2canvas(elementToCapture, {
+            backgroundColor: null, 
+            scale: 2 // High res
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `qr-design-${Date.now()}.png`;
+            link.href = canvas.toDataURL("image/png");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }).catch(err => {
+            console.error("Download error:", err);
+            alert("Could not generate image. Please try again.");
+        });
+    });
+
+
+    // --- Logic Functions ---
+
+    function handleTypeSwitch(type) {
         currentType = type;
         
         // UI Tabs
-        document.querySelectorAll('.type-btn').forEach(btn => {
+        typeBtns.forEach(btn => {
             btn.classList.remove('active', 'text-indigo-600', 'bg-blue-50', 'border', 'border-indigo-100');
             btn.classList.add('text-slate-500', 'hover:bg-slate-50');
         });
+        
         const activeBtn = document.getElementById(`btn-${type}`);
-        activeBtn.classList.add('active', 'text-indigo-600', 'bg-blue-50', 'border', 'border-indigo-100');
-        activeBtn.classList.remove('text-slate-500', 'hover:bg-slate-50');
+        if(activeBtn) {
+            activeBtn.classList.add('active', 'text-indigo-600', 'bg-blue-50', 'border', 'border-indigo-100');
+            activeBtn.classList.remove('text-slate-500', 'hover:bg-slate-50');
+        }
 
         // Toggle Inputs
         if (type === 'url') {
@@ -54,15 +122,15 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('input-group-url').classList.add('hidden');
             document.getElementById('input-group-text').classList.remove('hidden');
         }
-    };
+    }
 
-    // --- Frame Selection ---
-    window.selectFrame = (frame) => {
+    function handleFrameSelect(frame) {
         currentFrame = frame;
         
         // Visual selection state
-        document.querySelectorAll('.frame-option').forEach(el => el.classList.remove('selected'));
-        document.getElementById(`frame-opt-${frame}`).parentElement.classList.add('selected');
+        frameOptions.forEach(el => el.classList.remove('selected'));
+        const activeOpt = document.getElementById(`opt-${frame}`);
+        if (activeOpt) activeOpt.classList.add('selected');
 
         // Apply classes to wrapper for CSS styling
         captureWrapper.className = `inline-block p-4 bg-transparent transition-all duration-300 frame-style-${frame}`;
@@ -78,18 +146,19 @@ document.addEventListener('DOMContentLoaded', () => {
             frameCustomizationPanel.classList.remove('hidden');
             updateFrameStyles();
         }
-    };
+    }
 
-    // --- Style Updates ---
     function updateFrameStyles() {
+        if (!frameColorInput || !frameTextInput) return;
+
         const color = frameColorInput.value;
         const text = frameTextInput.value;
 
         // Update hex display
-        frameColorHex.value = color.toUpperCase();
+        if (frameColorHex) frameColorHex.value = color.toUpperCase();
 
         // Update Text
-        frameTextElement.textContent = text;
+        if (frameTextElement) frameTextElement.textContent = text;
 
         if (currentFrame === 'simple') {
             frameWrapper.style.border = `12px solid ${color}`;
@@ -109,24 +178,32 @@ document.addEventListener('DOMContentLoaded', () => {
             frameTextElement.style.background = 'transparent';
             frameTextElement.style.boxShadow = 'none';
             frameTextElement.style.position = 'absolute';
+            frameTextElement.style.left = '0';
+            frameTextElement.style.right = '0';
         }
         else if (currentFrame === 'top-bubble') {
             frameWrapper.style.border = `4px solid ${color}`;
             frameWrapper.style.borderRadius = '20px';
             frameWrapper.style.padding = '20px';
+            frameWrapper.style.paddingBottom = '20px'; // Reset
             frameTextElement.style.display = 'block';
             frameTextElement.style.background = color;
-            // Contrast text color for bubble
             frameTextElement.style.color = getContrastYIQ(color); 
             frameTextElement.style.top = '-20px';
             frameTextElement.style.bottom = 'auto';
             frameTextElement.style.position = 'absolute';
+            frameTextElement.style.left = '50%';
+            frameTextElement.style.right = 'auto';
+            frameTextElement.style.transform = 'translateX(-50%)';
             frameTextElement.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+            frameTextElement.style.padding = '8px 24px';
+            frameTextElement.style.borderRadius = '99px';
+            frameTextElement.style.whiteSpace = 'nowrap';
         }
     }
     
-    // Helper for text contrast
     function getContrastYIQ(hexcolor){
+        if (!hexcolor) return 'white';
         hexcolor = hexcolor.replace("#", "");
         var r = parseInt(hexcolor.substr(0,2),16);
         var g = parseInt(hexcolor.substr(2,2),16);
@@ -135,85 +212,46 @@ document.addEventListener('DOMContentLoaded', () => {
         return (yiq >= 128) ? 'black' : 'white';
     }
 
-
-    // --- Event Listeners ---
-    
-    // Frame Controls
-    frameTextInput.addEventListener('input', updateFrameStyles);
-    frameColorInput.addEventListener('input', updateFrameStyles);
-
-    // QR Controls
-    document.querySelectorAll('.level-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.level-btn').forEach(b => {
-                b.classList.remove('active', 'bg-indigo-50', 'text-indigo-700', 'border-indigo-600');
-                b.classList.add('text-slate-600', 'border-slate-200');
-            });
-            e.target.classList.add('active', 'bg-indigo-50', 'text-indigo-700', 'border-indigo-600');
-            e.target.classList.remove('text-slate-600', 'border-slate-200');
-            correctionLevel = e.target.dataset.level;
-        });
-    });
-
-    sizeInput.addEventListener('input', (e) => {
-        sizeValueDisplay.textContent = `${e.target.value}px`;
-    });
-
-    generateBtn.addEventListener('click', generateQR);
-    
-    // --- Core Logic ---
-
     function generateQR() {
-        // Cleanup
+        // Cleanup old QR
         qrcodeContainer.innerHTML = '';
         
-        // Data
-        let data = currentType === 'url' ? urlInput.value.trim() : textInput.value.trim();
-        if (!data) data = 'https://github.com/mbelik07';
+        let data = '';
+        if (currentType === 'url') {
+            data = urlInput.value.trim();
+            if (!data) data = 'https://github.com/mbelik07';
+        } else {
+            data = textInput.value.trim();
+            if (!data) data = 'Hello World';
+        }
 
-        const size = parseInt(sizeInput.value);
+        const size = parseInt(sizeInput.value) || 300;
         const colorDark = colorFgInput.value;
         const colorLight = colorBgInput.value;
 
-        try {
-            const qr = new QRCode(qrcodeContainer, {
-                text: data,
-                width: size,
-                height: size,
-                colorDark : colorDark,
-                colorLight : colorLight,
-                correctLevel : QRCode.CorrectLevel[correctionLevel || 'H']
-            });
-            
-            // Re-apply frame styles to ensure they wrap the new QR correctly
-            updateFrameStyles();
-            
-        } catch (error) {
-            console.error(error);
-        }
+        // Short timeout to ensure DOM is ready for repainting
+        setTimeout(() => {
+            try {
+                new QRCode(qrcodeContainer, {
+                    text: data,
+                    width: size,
+                    height: size,
+                    colorDark : colorDark,
+                    colorLight : colorLight,
+                    correctLevel : QRCode.CorrectLevel[correctionLevel]
+                });
+                
+                // Re-apply frame styles
+                updateFrameStyles();
+                
+            } catch (error) {
+                console.error("QR Error", error);
+                alert("Error generating code. Please check your text length.");
+            }
+        }, 10);
     }
 
-    // --- Download Logic (Composite) ---
-    downloadBtn.addEventListener('click', () => {
-        
-        // Use html2canvas to screenshot the wrapper div
-        // We use 'captureWrapper' to ensuring margins/padding are handled if needed, 
-        // or just 'frameWrapper' for the tightest fit. 
-        // Let's use frameWrapper to avoid getting the transparent bg of the container.
-        
-        const elementToCapture = frameWrapper;
-        
-        html2canvas(elementToCapture, {
-            backgroundColor: null, // Transparent if png
-            scale: 2 // High res
-        }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = `qr-design-${Date.now()}.png`;
-            link.href = canvas.toDataURL("image/png");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
-    });
+    // --- Boot ---
+    generateQR();
 
 });
